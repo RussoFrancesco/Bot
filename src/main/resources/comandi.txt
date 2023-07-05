@@ -1,0 +1,17 @@
+start - avvia conversazione
+add - inserisci un nuovo ristorante nel db
+add_with_photo - inserisci un ristorante con una foto del locale
+add_rating - aggiungi una nuova recensione
+show_my_restaurant - mostra tutti i ristoranti inseriti da te
+show_best_restaurant - mostra i 5 ristoranti col rating più alto scelta dalla community
+show_restaurant - mostra tutte le recensioni di quel ristorante
+show_all - mostra tutti i ristoranti
+show_recents_restaurant - mostra i 5 ristoranti aggiunti più recentemente
+show_recents_ratings - mostra le 5 recensioni aggiunte più recentemente
+show_my_ratings - mostra le tue recensioni
+modify - modifica i dati su un ristorante specifico
+modify_rating - modifica una recensione inserita da te
+delete - elimina un ristorante tra quelli inseriti da te
+delete_rating - elimina una recensione fatta da te
+
+

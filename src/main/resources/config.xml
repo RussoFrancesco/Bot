@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<bot>
+    <name>Progetto_Ristoranti_Bot</name>
+    <token>6138908091:AAEyoGjvLCDWKK0JI97lZvX_ITYgQUtBQaM</token>
+    <dbaddress>jdbc:mysql://localhost:3307</dbaddress>
+    <dbuser>root</dbuser>
+    <dbpassword>root</dbpassword>
+</bot>
