@@ -20,7 +20,7 @@ public class Bot extends TelegramLongPollingBot {
     private static final String pathComandi = "/Users/francescorusso/Desktop/Bot/src/main/resources/comandi.txt";
 
 
-    private Message last_msg;
+    private MessageParser msp;
     private DbManager dbm=new DbManager();
     private byte [] imgdata;
 
@@ -51,7 +51,6 @@ public class Bot extends TelegramLongPollingBot {
         if (!dbm.userExists(userId)){
             dbm.insertUser(userId);
         }
-
 
         if(msg.isCommand()) {
             String comando= msg.getText();
@@ -108,21 +107,28 @@ public class Bot extends TelegramLongPollingBot {
             }
 
         }
-
         else{
-            String p=dbm.getLast_msg(userId);
-            System.out.println("prova "+p);
+            String formatted=null;
+
+            if(!msg.hasPhoto()) {
+                msp = new MessageParser(msg.getText());
+                formatted = msp.modify_format();
+            }
 
             switch (dbm.getLast_msg(userId)) {
                 case "/add":
-                    Restaurant r = get_info_from_message(msg.getText());
-                    r.inserisci_nel_db(userId);
-                    sendText(userId, "Ristorante inserito nel db!");
+                    if (msp.checkFormatInsertRestaurant()){
+                        Restaurant r = get_info_from_message(formatted);
+                        r.inserisci_nel_db(userId);
+                        sendText(userId, "Ristorante inserito nel db!");
+                    }
+                    else {
+                        sendText(userId, "Errore nel formato");
+                    }
                     break;
 
                 case "/add_with_photo":
                     if (msg.hasPhoto()) {
-                        System.out.println("ok");
                         List<PhotoSize> photos = msg.getPhoto();
                         PhotoSize lastPhoto = photos.get(photos.size() - 1);
                         String photoId = lastPhoto.getFileId();
@@ -131,39 +137,43 @@ public class Bot extends TelegramLongPollingBot {
                         System.out.println(imgdata);
                         sendText(userId, "ora manda le info");
                         dbm.update_last_msg(userId,"/info_foto");
-                        System.out.println("il messaggii: "+dbm.getLast_msg(userId));
                     }
                     break;
 
                 case "/info_foto":
-                    System.out.println(msg.getText());
-                    RestaurantWithPhoto restaurantWithPhoto2=get_info_from_message(msg.getText(),imgdata);
-                    restaurantWithPhoto2.inserisci_nel_db(userId);
-                    sendText(userId,"Ristorante e foto inserito nel db!");
+                    if (msp.checkFormatInsertRestaurant()){
+                        RestaurantWithPhoto restaurantWithPhoto2=get_info_from_message(msg.getText(),imgdata);
+                        restaurantWithPhoto2.inserisci_nel_db(userId);
+                        sendText(userId,"Ristorante e foto inserito nel db!");
+                    }
+                    else
+                        sendText(userId, "Errore nel formato");
                     break;
 
                 case "/add_rating":
-                    String messaggio = msg.getText();
-                    System.out.println(messaggio);
-                    String[] parts = messaggio.split(":");
-                    int id_ristorante = Integer.parseInt(parts[0]);
-                    Restaurant restaurant = new Restaurant(id_ristorante);
-                    int rating = Integer.parseInt(parts[1]);
-                    Recensione recensione;
-                    if (parts.length == 3 && !(parts[2].isEmpty())) {
-                        recensione = new Recensione(rating, parts[2]);
-                    } else {
-                        recensione = new Recensione(rating);
+                    if (msp.checkFormatInsertRating()){
+                        String[] parts = formatted.split(":");
+                        int id_ristorante = Integer.parseInt(parts[0]);
+                        Restaurant restaurant = new Restaurant(id_ristorante);
+                        int rating = Integer.parseInt(parts[1]);
+                        Recensione recensione;
+                        if (parts.length == 3 && !(parts[2].isEmpty())) {
+                            recensione = new Recensione(rating, parts[2]);
+                        } else {
+                            recensione = new Recensione(rating);
+                        }
+                        restaurant.inserisci_recensione(recensione, userId);
+                        sendText(userId, "Recensione inviata al db");
                     }
-                    restaurant.inserisci_recensione(recensione, userId);
-                    sendText(userId, "Recensione inviata al db");
+                    else
+                        sendText(userId, "Errore nel formato");
                     break;
 
 
                 case "/delete":
-                    messaggio = msg.getText();
+                    String messaggio = msg.getText();
                     int id = Integer.parseInt(messaggio);
-                    restaurant = new Restaurant(id);
+                    Restaurant restaurant = new Restaurant(id);
                     sendText(userId, restaurant.elimina_ristorante(userId));
                     break;
 
@@ -196,35 +206,40 @@ public class Bot extends TelegramLongPollingBot {
                     break;
 
                 case "/modify":
-                    parts = msg.getText().split(":");
-                    restaurant= null;
-                    if (parts.length==2){
-                        String indirizzo = "";
-                        restaurant = new Restaurant(Integer.parseInt(parts[0]), parts[1], indirizzo);
-                    } else if (parts.length == 3) {
-                        restaurant = new Restaurant(Integer.parseInt(parts[0]), parts[1], parts[2]);
+                    if(msp.checkFormat()){
+                        String[] parts = msg.getText().split(":");
+                        restaurant= null;
+                        if (parts.length==2){
+                            String indirizzo = "";
+                            restaurant = new Restaurant(Integer.parseInt(parts[0]), parts[1], indirizzo);
+                        } else if (parts.length == 3) {
+                            restaurant = new Restaurant(Integer.parseInt(parts[0]), parts[1], parts[2]);
+                        }
+                        sendText(userId, restaurant.modifica_ristorante(userId));
                     }
-                    System.out.println(parts.length);
-                    System.out.println(parts[0]+ " "+parts[1]);
-                    sendText(userId, restaurant.modifica_ristorante(userId));
+                    else
+                        sendText(userId, "Errore nel formato");
                     break;
-                case "/modify_rating":
-                    parts = msg.getText().split(":");
-                    System.out.println(parts.length);
-                    System.out.println(parts[0]+ " "+parts[1]);
-                    if(parts.length==2){
-                        String descrizione = "";
-                        sendText(userId, dbm.modifica_recensione(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), descrizione, userId));
-                    }
-                    else {
-                        sendText(userId, dbm.modifica_recensione(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), parts[2], userId));
-                    }
 
+                case "/modify_rating":
+                    String[] parts = msg.getText().split(":");
+                    int valutazione = Integer.parseInt(parts[1]);
+                    if (msp.checkFormat() && (valutazione>=-1 && valutazione<=5)){
+                            if (parts.length==2){
+                                String descrizione = "";
+                                sendText(userId, dbm.modifica_recensione(Integer.parseInt(parts[0]), valutazione, descrizione, userId));
+                                }
+                            else {
+                                sendText(userId, dbm.modifica_recensione(Integer.parseInt(parts[0]), valutazione, parts[2], userId));
+                                }
+                    }
+                    else
+                        sendText(userId, "Errore nel formato");
                     break;
             }
         }
 
-        last_msg = msg;
+
         if (!msg.getText().isEmpty()) {
             dbm.update_last_msg(userId, msg.getText());
         }
@@ -273,7 +288,6 @@ public class Bot extends TelegramLongPollingBot {
     private Restaurant get_info_from_message(String text){
         String[] parts =text.split(":");
         Restaurant r = new Restaurant(parts[0], parts[1]);
-        System.out.println(parts[0]+" "+parts[1]);
         return  r;
     }
 

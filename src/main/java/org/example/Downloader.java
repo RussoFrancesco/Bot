@@ -16,7 +16,6 @@ public class Downloader {
     public byte[] download(String sourceurl,String bottoken){
         try {
             String bot_url="https://api.telegram.org/file/bot"+bottoken+"/";
-            System.out.println("downloader");
             //creo ogg. di tipo URL
             URL url = new URL(sourceurl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -28,9 +27,7 @@ public class Downloader {
             String response = reader.readLine();
             JSONObject jsonResponse = new JSONObject(response);
             String filePath = jsonResponse.getJSONObject("result").getString("file_path");
-            System.out.println(filePath);
             String downloadUrl = bot_url+ filePath;
-            System.out.println("download "+downloadUrl);
 
             // Scarica l'immagine utilizzando l'URL di download
             URL imageUrl = new URL(downloadUrl);

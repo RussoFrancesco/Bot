@@ -30,11 +30,8 @@ public class DbManager {
             username=c.getUsername();
             password=c.getPassword();
 
-            System.out.println("forname");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("mi connetto");
             con = DriverManager.getConnection(url, username, password);
-            System.out.println("creo lo statement");
             stmt = con.createStatement();
         }
         catch (SQLException e) {
@@ -51,16 +48,12 @@ public class DbManager {
             String query = "SELECT * FROM ristoranti.users WHERE id =?";
             PreparedStatement statement = con.prepareStatement(query);
             statement.setLong(1, userid);
-            //System.out.println(statement);
             ResultSet rs = statement.executeQuery();
             int count=0;
             if (rs.next()){
-                //System.out.println("qualcosa la abbiamo");
                 return true;
             }
-
             else{
-                System.out.println("non c' è nulla");
                 return false;
             }
         } catch (SQLException e) {
@@ -72,10 +65,8 @@ public class DbManager {
     public void insertUser(long userId) {
         try {
             String query="INSERT INTO ristoranti.users (id) VALUES (?)";
-            //System.out.println("query: "+query);
             PreparedStatement preparedStmt=con.prepareStatement(query);
             preparedStmt.setLong(1,userId);
-            System.out.println(preparedStmt);
             int row= preparedStmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -105,14 +96,11 @@ public class DbManager {
         try {
 
             String query="INSERT INTO ristoranti.ristoranti (nome,indirizzo,user_id) VALUES (?,?,?);";
-            System.out.println("prpd stmt");
             PreparedStatement preparedStmt=con.prepareStatement(query);
             preparedStmt.setString(1,ristorante.getNome());
             preparedStmt.setString(2,ristorante.getIndirizzo());
             preparedStmt.setLong(3,userId);
             int row= preparedStmt.executeUpdate();
-            // stmt.executeUpdate();
-            System.out.println("eseguita!!");
         } catch (SQLException e) {
             System.err.format("SQL State: %s\n%s", e.getSQLState(), e.getMessage());
         }
@@ -123,7 +111,6 @@ public class DbManager {
         try {
 
             String query="INSERT INTO ristoranti.ristoranti (nome,indirizzo,user_id,img) VALUES (?,?,?,?);";
-            System.out.println("prpd stmt");
             PreparedStatement preparedStmt=con.prepareStatement(query);
             preparedStmt.setString(1,ristorante.getNome());
             preparedStmt.setString(2,ristorante.getIndirizzo());
@@ -179,7 +166,6 @@ public class DbManager {
 
     public String elimina_ristorante(int id,long userId){
         String query="DELETE   FROM ristoranti.ristoranti WHERE id="+id+" AND user_id="+userId;
-        System.out.println(query);
         int rowsAffected=0;
         try {
             rowsAffected = stmt.executeUpdate(query);
@@ -221,7 +207,6 @@ public class DbManager {
             preparedStmt.setString(3, descrizione);
             preparedStmt.setInt(4, id_r);
             preparedStmt.setLong(5,userId);
-            //System.out.println(preparedStmt);
             int row = preparedStmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -237,7 +222,6 @@ public class DbManager {
             preparedStmt.setInt(2,rating);
             preparedStmt.setInt(3,id_r);
             preparedStmt.setLong(4,userId);
-            //System.out.println(preparedStmt);
             int row = preparedStmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -311,9 +295,7 @@ public class DbManager {
             ResultSet rs = stmt.executeQuery(query);
             if (rs.next()) {
                 Blob blob = rs.getBlob("img");
-                System.out.println(blob);
                 blobData = blob.getBytes(1, (int) blob.length());
-                System.out.println(blobData);
             }
         }
         catch (SQLException e){
@@ -349,8 +331,6 @@ public class DbManager {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                //System.out.println("Eseguo l'aggiornamento delle medie");
-
                 CalcolaMedia calcolaMedia = new CalcolaMedia(stmt);
                 calcolaMedia.run();
             }
@@ -401,7 +381,6 @@ public class DbManager {
 
     public String elimina_recensione(int id, long userId) {
         String query="DELETE FROM ristoranti.recensioni WHERE id_recensione="+id+" AND user_id="+userId;
-        System.out.println(query);
         int rowsAffected=0;
         try {
             rowsAffected = stmt.executeUpdate(query);
@@ -416,7 +395,6 @@ public class DbManager {
 
     public String modifica_ristorante(int id, String nome, String indirizzo, long userId) {
         String query = "SELECT id FROM ristoranti.ristoranti WHERE id="+id+" AND user_id="+userId;
-        System.out.println(query);
         int rowsAffected = 0;
         try{
             ResultSet rs = stmt.executeQuery(query);
@@ -427,7 +405,6 @@ public class DbManager {
                 if(!nome.isEmpty()){
                     try{
                     query = "UPDATE ristoranti.ristoranti SET nome='"+nome+"' WHERE id="+id;
-                    System.out.println(query);
                     stmt.executeUpdate(query);
                     rowsAffected = stmt.executeUpdate(query);
                     }catch (SQLException e){
@@ -437,7 +414,6 @@ public class DbManager {
                 if(!indirizzo.isEmpty()){
                     try{
                     query = "UPDATE ristoranti.ristoranti SET indirizzo='"+indirizzo+"' WHERE id="+id;
-                    System.out.println(query);
                     stmt.executeUpdate(query);
                     rowsAffected = stmt.executeUpdate(query);
                     }catch (SQLException e){
@@ -457,7 +433,6 @@ public class DbManager {
 
     public String modifica_recensione(int id, Integer rating, String descrizione, long userId){
         String query = "SELECT id_recensione FROM ristoranti.recensioni WHERE id_recensione="+id+" AND user_id="+userId;
-        System.out.println(query);
         int rowsAffected = 0;
         try{
             ResultSet rs = stmt.executeQuery(query);
@@ -468,7 +443,6 @@ public class DbManager {
                 if(rating!=-1){
                     try {
                     query = "UPDATE ristoranti.recensioni SET rating="+rating+", data_recensione='"+java.sql.Date.valueOf(LocalDate.now()) +"' WHERE id_recensione="+id;
-                    System.out.println(query);
                     stmt.executeUpdate(query);
                     rowsAffected = stmt.executeUpdate(query);
                     }catch (SQLException e){
@@ -478,7 +452,6 @@ public class DbManager {
                 if(!descrizione.isEmpty()){
                     try {
                     query = "UPDATE ristoranti.recensioni SET descrizione='"+descrizione+"', data_recensione='"+java.sql.Date.valueOf(LocalDate.now())+"' WHERE id_recensione="+id;
-                    System.out.println(query);
                     stmt.executeUpdate(query);
                     rowsAffected = stmt.executeUpdate(query);
                     }catch (SQLException e){
